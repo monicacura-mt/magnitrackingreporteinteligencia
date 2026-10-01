@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Chosen Palette: Executive Navy (#0A192F) & Tactical Orange (#FF6B00) with Light Warm Neutrals (#F8FAFC) -->
+    <!-- Application Structure Plan: Interactive intelligence dashboard organized into 6 executive sections: Risk Overview & Severity, Regional Risk Radiography, Temporal Window Analysis, Target Cargo & Vulnerability Breakdown, Jammer Threats & C5 Response Balance, and a Real-Time Tactical Route Risk Assessor. Re-engineered to strictly align with August 2026 report data. -->
+    <!-- Visualization & Content Choices: Uses Chart.js canvas elements for time-series context, state donut breakdown, weekly/hourly risk curves, and product preference histograms. Custom UI cards handle tactical corridor details and legal/police responses. Includes an interactive risk calculator built with vanilla JS. Strictly avoids SVG and Mermaid JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Consolidado de Inteligencia - Riesgo Carretero en México - MagniTracking (Agosto 2026)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+            color: #0A192F;
+        }
+        .text-corporate-navy { color: #0A192F; }
+        .bg-corporate-navy { background-color: #0A192F; }
+        .text-corporate-orange { color: #FF6B00; }
+        .bg-corporate-orange { background-color: #FF6B00; }
+        .border-corporate-orange { border-color: #FF6B00; }
+        .border-corporate-navy { border-color: #0A192F; }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+        }
+        @media (max-width: 640px) {
+            .chart-container { height: 260px; }
+        }
+        
+        .card {
+            border: 1px solid #E2E8F0;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+
+        .floating-cta {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .btn-float {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+            text-decoration: none;
+        }
+        .btn-float:hover {
+            transform: scale(1.1);
+        }
+        .btn-whatsapp-brand { background-color: #25D366; }
+        .btn-phone-brand { background-color: #FF6B00; }
+
+        .custom-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background-color: #F8FAFC;
+            border-radius: 0.5rem;
+            border: 1px solid #E2E8F0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0A192F;
+        }
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.35rem;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navegación Superior -->
+    <nav class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="font-black text-2xl tracking-wider text-corporate-navy">MAGNI<span class="text-corporate-orange">TRACKING</span></span>
+            </div>
+            <div class="flex items-center gap-6">
+                <span class="text-sm font-extrabold text-corporate-navy hidden md:inline">Reporte de Inteligencia Logistics - Agosto 2026</span>
+                <a href="tel:4424453661" class="bg-corporate-navy text-white px-5 py-2.5 rounded-md font-bold hover:bg-slate-900 transition-colors flex items-center gap-2 border border-slate-700 shadow-sm">
+                    <span class="text-corporate-orange">&#9742;</span>
+                    <span>442 445 3661</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Encabezado Principal -->
+    <header class="bg-corporate-navy py-14 md:py-18 px-4 text-center relative overflow-hidden">
+        <div class="max-w-4xl mx-auto relative z-10">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <span class="bg-corporate-orange text-white px-3 py-1 rounded-md text-xs font-black tracking-widest uppercase">
+                    Agosto 2026
+                </span>
+                <span class="bg-red-600 text-white px-3 py-1 rounded-md text-xs font-black tracking-widest uppercase">
+                    Nivel de Riesgo: ALTO
+                </span>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
+                Reporte Consolidado de Inteligencia <br class="hidden md:block" />
+                <span class="text-corporate-orange">Riesgo Carretero en México</span>
+            </h1>
+            <p class="text-base md:text-lg text-slate-300 font-medium max-w-2xl mx-auto">
+                "El robo se concentra. La complejidad del riesgo crece. Anticipar el riesgo. Proteger la operación."
+            </p>
+            <p class="text-xs text-slate-400 mt-3">
+                Fuentes: Monitoreo GPS del sector privado especializado y registros oficiales del SESNSP.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+
+        <!-- Sección 1: Resumen Ejecutivo y Modalidades de Riesgo -->
+        <section id="contexto">
+            <div class="mb-8 text-center md:text-left">
+                <h2 class="text-3xl font-bold text-corporate-navy border-l-4 border-corporate-orange pl-4 inline-block">1. Resumen Ejecutivo e Incidencia Delictiva</h2>
+                <p class="mt-4 text-slate-700 max-w-4xl text-base md:text-lg leading-relaxed">
+                    El informe consolidado de inteligencia logística del mes de <strong>Agosto 2026</strong> revela que el <strong>82% de la siniestralidad se focaliza en solo 10 entidades federativas</strong>. La modalidad predominante sigue siendo la intercepción en tránsito (65%), mientras que el uso de inhibidores de señal (*jammers*) alcanza proporciones críticas en el <strong>80% al 85% de los robos registrados</strong>.
+                </p>
+            </div>
+
+            <!-- KPI Cards Oficiales -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="card bg-white p-6 text-center border-t-4 border-t-corporate-orange">
+                    <div class="text-3xl mb-2">&#128667;</div>
+                    <div class="text-3xl font-black text-corporate-navy">65%</div>
+                    <div class="text-slate-800 mt-2 font-extrabold text-xs uppercase">Intercepción en Tránsito</div>
+                    <p class="text-xs text-slate-500 mt-1">Modalidad predominante del delito contra la carga.</p>
+                </div>
+                <div class="card bg-white p-6 text-center border-t-4 border-t-corporate-navy">
+                    <div class="text-3xl mb-2">&#127976;</div>
+                    <div class="text-3xl font-black text-corporate-navy">33%</div>
+                    <div class="text-slate-800 mt-2 font-extrabold text-xs uppercase">Robo de Unidades Estacionadas</div>
+                    <p class="text-xs text-slate-500 mt-1">Ocurre en cachimbas, patios y filas pre-entrega.</p>
+                </div>
+                <div class="card bg-white p-6 text-center border-t-4 border-t-red-500">
+                    <div class="text-3xl mb-2">&#128262;</div>
+                    <div class="text-3xl font-black text-red-600">80 - 85%</div>
+                    <div class="text-slate-800 mt-2 font-extrabold text-xs uppercase">Robos con Jammer Activo</div>
+                    <p class="text-xs text-slate-500 mt-1">8.5 de cada 10 asaltos con inhibidor.</p>
+                </div>
+                <div class="card bg-white p-6 text-center border-t-4 border-t-corporate-orange">
+                    <div class="text-3xl mb-2">&#128506;&#65039;</div>
+                    <div class="text-3xl font-black text-corporate-navy">82%</div>
+                    <div class="text-slate-800 mt-2 font-extrabold text-xs uppercase">Concentrado en 10 Estados</div>
+                    <p class="text-xs text-slate-500 mt-1">Edomex, Jalisco, Puebla, Gto, Ver lideran.</p>
+                </div>
+            </div>
+
+            <!-- Evolución Contextual y Vulnerabilidad Vehicular -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 card bg-white p-6 md:p-8">
+                    <h3 class="text-xl font-bold text-corporate-navy mb-2">Tendencia Mensual de Folios Atendidos (Muestra de Agosto)</h3>
+                    <p class="text-xs text-slate-500 mb-6">Muestra histórica comparativa de prediseño y atención de siniestralidad por monitoreo satelital privado.</p>
+                    <div class="chart-container">
+                        <canvas id="chartContext"></canvas>
+                    </div>
+                </div>
+                <div class="card bg-slate-900 text-white p-6 md:p-8 flex flex-col justify-between border-none shadow-lg">
+                    <div>
+                        <span class="text-corporate-orange font-bold text-xs uppercase tracking-widest block mb-2">Vulnerabilidad por Unidad</span>
+                        <h3 class="text-2xl font-extrabold text-white mb-4">Desglose de Vehículos Sustraídos</h3>
+                        <p class="text-xs text-slate-300 mb-4">Muestra representativa de unidades afectadas acumuladas:</p>
+                        <ul class="space-y-3 text-sm text-slate-300">
+                            <li class="flex justify-between border-b border-slate-800 pb-2">
+                                <span class="font-medium">Tractocamiones y Pesados:</span>
+                                <strong class="text-white font-black">36.5% (116 u.)</strong>
+                            </li>
+                            <li class="flex justify-between border-b border-slate-800 pb-2">
+                                <span class="font-medium">Motocicletas (Halconeo/Urbano):</span>
+                                <strong class="text-white font-black">32.1% (102 u.)</strong>
+                            </li>
+                            <li class="flex justify-between border-b border-slate-800 pb-2">
+                                <span class="font-medium">Vehículos Particulares / SUVs:</span>
+                                <strong class="text-white font-black">19.8% (63 u.)</strong>
+                            </li>
+                            <li class="flex justify-between border-b border-slate-800 pb-2">
+                                <span class="font-medium">Utilitarios y Ligeros Reparto:</span>
+                                <strong class="text-white font-black">11.6% (37 u.)</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400">
+                        La alta prevalencia en carga pesada refleja el interés criminal por insumos industriales y abarrotes de alta rotación.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 2: Geografía del Riesgo y Corredores Críticos -->
+        <section id="geografia">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-corporate-navy border-l-4 border-corporate-orange pl-4">2. Radiografía Geográfica del Riesgo y Corredores Críticos</h2>
+                <p class="mt-4 text-slate-700 max-w-4xl text-base md:text-lg leading-relaxed">
+                    Valle de México, Bajío, Occidente y Golfo concentran los ejes industriales atacados. Las estructuras criminales operan en sincronía con la programación de despachos logísticos.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="card bg-white p-6 md:p-8">
+                    <h3 class="text-xl font-bold text-corporate-navy mb-4">¿Dónde se concentra el delito? (%)</h3>
+                    <p class="text-xs text-slate-500 mb-4">5 estados concentran más de la mitad del volumen nacional de siniestros.</p>
+                    <div class="chart-container">
+                        <canvas id="chartGeo"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-4 flex flex-col justify-center">
+                    <div class="card bg-white p-6 border-l-4 border-corporate-orange bg-orange-50/50">
+                        <h4 class="text-lg font-bold text-corporate-navy mb-1">&#128205; Estado de México (30%) y Jalisco (8%)</h4>
+                        <p class="text-slate-800 text-sm leading-relaxed">
+                            <strong>Edomex:</strong> Epicentro nacional con focos rojos en Ecatepec, Tecámac, Cuautitlán Izcalli y Jilotepec.<br>
+                            <strong>Jalisco:</strong> Alta actividad en la ZMG (Guadalajara, Tlaquepaque) y el corredor clave de Lagos de Moreno.
+                        </p>
+                    </div>
+                    <div class="card bg-white p-6 border-l-4 border-corporate-navy bg-slate-100">
+                        <h4 class="text-lg font-bold text-corporate-navy mb-1">&#128250; Puebla (6%), Guanajuato (6%) y Veracruz (6%)</h4>
+                        <p class="text-slate-800 text-sm leading-relaxed">
+                            <strong>Puebla:</strong> San Martín Texmelucan concentran de los índices más altos.<br>
+                            <strong>Guanajuato y Veracruz:</strong> Ataques constantes sobre León, Celaya y tramos portuarios como Orizaba y Tierra Blanca.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vías Federales de Mayor Peligrosidad -->
+            <div class="card bg-corporate-navy text-white p-6 md:p-8">
+                <h3 class="text-xl font-bold text-corporate-orange mb-2 flex items-center gap-2">
+                    <span>&#128682;</span> Vías Federales de Mayor Peligrosidad e Intercepción
+                </h3>
+                <p class="text-xs text-slate-300 mb-6">Puntos focales de intercepción sobre los ejes que conectan el Valle de México, el Bajío, el Occidente y el Golfo.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-800/80 p-5 rounded-lg border border-slate-700">
+                        <div class="text-base font-extrabold text-white mb-2 text-corporate-orange">1. Carretera Fed. 45D (Méx - Qro - León)</div>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            Eje neurálgico industrial con presencia de bloqueos dinámicos, encandilamiento por láser verde e inhibición GPS.
+                        </p>
+                    </div>
+                    <div class="bg-slate-800/80 p-5 rounded-lg border border-slate-700">
+                        <div class="text-base font-extrabold text-white mb-2 text-corporate-orange">2. Carretera Fed. 57 (Qro - San Luis Potosí)</div>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            Corredor clave de exportación afectado por falsos retenes tácticos con clonación de patrullas y asaltos nocturnos.
+                        </p>
+                    </div>
+                    <div class="bg-slate-800/80 p-5 rounded-lg border border-slate-700">
+                        <div class="text-base font-extrabold text-white mb-2 text-corporate-orange">3. Carretera Fed. 80D (Gdl - Lagos de Moreno)</div>
+                        <p class="text-slate-300 text-xs leading-relaxed">
+                            Intercepciones agresivas mediante uso de ponchallantas, obstáculos en la vía y despojo forzado de remolques.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 3: Ventanas Temporales de Exposición -->
+        <section id="tiempo">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-corporate-navy border-l-4 border-corporate-orange pl-4">3. Ventanas Temporales de Exposición</h2>
+                <p class="mt-4 text-slate-700 max-w-4xl text-base md:text-lg leading-relaxed">
+                    Las estructuras criminales operan en sincronía con la programación de despachos logísticos. El <strong>76-83% de los asaltos ocurren en días hábiles</strong>, concentrándose la mayor severidad operativa en los turnos nocturnos y de madrugada (59%).
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card bg-white p-6 md:p-8">
+                    <h3 class="text-xl font-bold text-corporate-navy mb-2">¿Qué días son más riesgosos?</h3>
+                    <p class="text-xs text-slate-500 mb-6">Pico crítico concentrado en la segunda mitad de la semana laboral.</p>
+                    <div class="chart-container">
+                        <canvas id="chartDays"></canvas>
+                    </div>
+                    <div id="legendDays" class="custom-legend"></div>
+                </div>
+                <div class="card bg-white p-6 md:p-8 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-corporate-navy mb-2">¿Cuándo ocurre? (Distribución 24h)</h3>
+                        <p class="text-xs text-slate-500 mb-6">El 59% de los robos ocurre entre las 19:00 y las 07:00 hrs.</p>
+                        <div class="chart-container">
+                            <canvas id="chartHours"></canvas>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg text-xs md:text-sm text-slate-900 font-medium">
+                        <strong class="text-red-700 block mb-1">&#9888; Ventana Nocturna / Madrugada (59% Riesgo):</strong>
+                        El horario de 00:00 a 07:00 hrs acumula el <strong>31%</strong> y el de 19:00 a 00:00 hrs el <strong>28%</strong>. Restringir salidas o acoplamientos en este bloque es prioritario.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 4: Mercancías Objetivo -->
+        <section id="mercancias">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-corporate-navy border-l-4 border-corporate-orange pl-4">4. Mercancías Objetivo y Cargas de Alto Valor</h2>
+                <p class="mt-4 text-slate-700 max-w-4xl text-base md:text-lg leading-relaxed">
+                    Prioridad delictiva a productos de consumo masivo con reventa inmediata en mercados informales e insumos industriales de alta demanda.
+                </p>
+            </div>
+
+            <div class="card bg-white p-6 md:p-8 mb-8">
+                <h3 class="text-xl font-bold text-corporate-navy mb-2">Distribución Porcentual de Cargas Siniestradas</h3>
+                <p class="text-xs text-slate-500 mb-6">Reporte oficial del mes de Agosto 2026.</p>
+                <div class="chart-container">
+                    <canvas id="chartProducts"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="card p-6 text-white flex flex-col justify-between bg-corporate-navy">
+                    <div>
+                        <div class="text-3xl mb-2 text-corporate-orange">&#9936;&#65039;</div>
+                        <div class="text-2xl font-black text-white">33%</div>
+                        <h4 class="text-sm font-bold text-slate-200 mt-1 mb-2">Alimentos y Abarrotes</h4>
+                    </div>
+                    <p class="text-slate-300 text-xs leading-relaxed">Primer lugar por inmediatez de reventa y liquidez criminal.</p>
+                </div>
+                <div class="card p-6 bg-slate-100 flex flex-col justify-between border border-slate-300">
+                    <div>
+                        <div class="text-3xl mb-2 text-corporate-navy">&#128666;</div>
+                        <div class="text-2xl font-black text-corporate-navy">24%</div>
+                        <h4 class="text-sm font-bold text-corporate-navy mt-1 mb-2">Cajas Secas y Pesados</h4>
+                    </div>
+                    <p class="text-slate-700 text-xs leading-relaxed">Inmovilización total del remolque para vaciado completo.</p>
+                </div>
+                <div class="card p-6 text-white flex flex-col justify-between bg-corporate-navy">
+                    <div>
+                        <div class="text-3xl mb-2 text-corporate-orange">&#128250;</div>
+                        <div class="text-2xl font-black text-white">10%</div>
+                        <h4 class="text-sm font-bold text-slate-200 mt-1 mb-2">Electrónicos y Línea Blanca</h4>
+                    </div>
+                    <p class="text-slate-300 text-xs leading-relaxed">Mercancía de alto valor monetario por volumen de caja.</p>
+                </div>
+                <div class="card p-6 bg-slate-100 flex flex-col justify-between border border-slate-300">
+                    <div>
+                        <div class="text-3xl mb-2 text-corporate-navy">&#9881;&#65039;</div>
+                        <div class="text-2xl font-black text-corporate-navy">4%</div>
+                        <h4 class="text-sm font-bold text-corporate-navy mt-1 mb-2">Metales e Industria</h4>
+                    </div>
+                    <p class="text-slate-700 text-xs leading-relaxed">Acero, cobre y aluminio robados para mercado de reciclaje.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 5: Amenaza Tecnológica, Análisis Legislativo de Jammers y Coordinación -->
+        <section id="operacion">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-corporate-navy border-l-4 border-corporate-orange pl-4">5. Amenaza Tecnológica y Respuesta Táctica C5</h2>
+                <p class="mt-4 text-slate-700 max-w-4xl text-base md:text-lg leading-relaxed">
+                    Evaluación táctica de la inhibición de señal (*jammers*) y balance de coordinación operativa entre el sector privado, Guardia Nacional y C5 estatales.
+                </p>
+            </div>
+
+            <!-- Bloque Destacado de Amenaza Tecnológica: Jammers -->
+            <div class="card p-6 md:p-8 mb-8 border-l-8 border-l-red-600 bg-white shadow-lg">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                    <div class="space-y-3 lg:max-w-3xl">
+                        <span class="bg-red-100 text-red-700 px-3 py-1 rounded text-xs font-black uppercase tracking-wider">Amenaza Tecnológica Crítica</span>
+                        <h3 class="text-2xl font-black text-corporate-navy">Uso de Jammers en el Robo al Autotransporte</h3>
+                        <p class="text-slate-700 text-base leading-relaxed">
+                            El <strong>80% al 85% de los robos de carga en carreteras del país se cometen con inhibidores de señal encendidos</strong>. Esto representa que aproximadamente <strong>8.5 de cada 10 asaltos</strong> involucran bloqueo instantáneo de frecuencias celulares, GPS y transmisión de datos.
+                        </p>
+                        <p class="text-xs text-slate-600">
+                            Ante esta situación, el <strong>Senado de la República</strong> ha ratificado exhortos a la Guardia Nacional y a la SSPC para reforzar la inspección aduanal e inhibir el comercio ilegal de jammers.
+                        </p>
+                    </div>
+                    <div class="bg-corporate-navy text-white p-6 rounded-xl text-center min-w-[240px] w-full lg:w-auto flex-shrink-0">
+                        <div class="text-4xl font-black text-corporate-orange mb-1">8.5 / 10</div>
+                        <div class="text-xs uppercase font-bold text-slate-300 tracking-wider">Asaltos con Jammer Activo</div>
+                        <div class="mt-4 pt-3 border-t border-slate-700 text-xs text-slate-300">
+                            Rango de Prevalencia:<br><strong class="text-white text-base">80% - 85%</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Operativo e Integración C5 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div class="lg:col-span-2 card p-6 md:p-8 bg-slate-100 border-t-4 border-t-corporate-navy flex flex-col justify-center">
+                    <h3 class="text-2xl font-black text-corporate-navy mb-2">Balance Operativo de Recuperación</h3>
+                    <p class="text-slate-600 text-xs font-bold uppercase tracking-wider mb-6">Acumulado de los últimos 3 años - Coordinación Sector Privado, Guardia Nacional y C5 estatales</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            <span class="text-3xl font-black text-corporate-navy block">6,800+</span>
+                            <span class="text-xs text-slate-700 font-extrabold uppercase mt-1 block">Vehículos Recuperados</span>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            <span class="text-3xl font-black text-corporate-navy block">713</span>
+                            <span class="text-xs text-slate-700 font-extrabold uppercase mt-1 block">Detenciones Efectivas</span>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                            <span class="text-3xl font-black text-corporate-orange block">286</span>
+                            <span class="text-xs text-slate-700 font-extrabold uppercase mt-1 block">Bodegas Clandestinas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-corporate-navy text-white p-6 md:p-8 flex flex-col justify-between">
+                    <div>
+                        <span class="text-corporate-orange font-bold text-xs uppercase tracking-widest block mb-2">Respuesta Táctica</span>
+                        <h4 class="text-xl font-extrabold text-white mb-3">Integración C5 y Gabinete Metropolitano</h4>
+                        <p class="text-slate-300 text-xs leading-relaxed mb-4">
+                            Coordinación operativa entre CDMX, Estado de México, Puebla, Hidalgo y Morelos mediante el Gabinete Metropolitano de Control Vehicular.
+                        </p>
+                    </div>
+                    <ul class="space-y-3 text-xs text-slate-200 border-t border-slate-700 pt-4">
+                        <li class="flex items-start gap-2">
+                            <span class="text-corporate-orange font-bold">&#10003;</span>
+                            <span><strong>Lectura LPR con IA:</strong> Detección automática de placas y cruce instantáneo con listas de unidades robadas.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-corporate-orange font-bold">&#10003;</span>
+                            <span><strong>Patrullaje Aéreo con Drones:</strong> Cobertura aérea sobre corredores críticos y seguimiento en vivo.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-corporate-orange font-bold">&#10003;</span>
+                            <span><strong>Respuesta &lt; 10 MIN:</strong> Activación inmediata a partir del folio de predenuncia (911 / C5).</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección 6: Analizador Táctico de Rutas Logísticas -->
+        <section id="ia-analyzer" class="mt-12">
+            <div class="card bg-white p-6 md:p-8 border border-slate-200 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-corporate-navy via-corporate-orange to-red-600"></div>
+                
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-corporate-navy mb-2">Analizador Táctico de Rutas Logísticas</h2>
+                    <p class="text-slate-700 font-medium text-sm">
+                        Herramienta de evaluación de riesgo basada en el consolidado oficial de Agosto 2026. Evalúa corredores viales, ventanas horarias, severidad de jammers y tipo de mercancía.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 uppercase mb-2">Origen</label>
+                        <input type="text" id="route-origin" placeholder="Ej. CDMX, Guadalajara o León" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-corporate-navy text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 uppercase mb-2">Destino</label>
+                        <input type="text" id="route-dest" placeholder="Ej. Querétaro, San Luis Potosí o Puebla" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-corporate-navy text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 uppercase mb-2">Ventana Horaria</label>
+                        <select id="route-time" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-corporate-navy bg-white text-sm">
+                            <option value="Matutino (07:00 - 12:00)">Matutino (07:00 - 12:00) [16% Riesgo]</option>
+                            <option value="Vespertino (12:00 - 19:00)">Vespertino (12:00 - 19:00) [25% Riesgo]</option>
+                            <option value="Nocturno (19:00 - 00:00)">Nocturno (19:00 - 00:00) [28% Riesgo Elevado]</option>
+                            <option value="Madrugada (00:00 - 07:00)">Madrugada (00:00 - 07:00) [31% Riesgo Crítico]</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-800 uppercase mb-2">Tipo de Carga</label>
+                        <select id="route-cargo" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 bg-slate-50 font-bold focus:outline-none focus:ring-2 focus:ring-corporate-navy bg-white text-sm">
+                            <option value="Alimentos y Abarrotes">Alimentos y Abarrotes (33% Riesgo Máximo)</option>
+                            <option value="Cajas Secas y Pesados">Cajas Secas y Pesados (24% Riesgo)</option>
+                            <option value="Electrónicos y Línea Blanca">Electrónicos y Línea Blanca (10% Riesgo)</option>
+                            <option value="Metales e Industria">Metales e Industria (4% Riesgo Especializado)</option>
+                            <option value="Resto de Mercancías">Resto de Mercancías (29% Riesgo General)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="error-message" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 font-bold rounded text-sm"></div>
+
+                <div class="flex flex-col items-center justify-center">
+                    <button id="btn-analyze" class="w-full md:w-auto bg-corporate-navy hover:bg-slate-800 text-white font-black py-4 px-10 rounded-lg shadow-md transition-all transform active:scale-95 flex items-center justify-center gap-3">
+                        <span id="btn-text">Generar Diagnóstico Táctico de Ruta</span>
+                    </button>
+                    <p class="text-xs text-slate-500 font-semibold mt-3 text-center">&#128100; Análisis privado. Basado en el consolidado estadístico de Agosto 2026.</p>
+                </div>
+
+                <div id="ai-result-container" class="hidden mt-8 p-6 bg-slate-100 rounded-lg border border-slate-300">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-300 pb-4 mb-4 gap-2">
+                        <h4 class="text-xl font-extrabold text-corporate-navy flex items-center">
+                            <span class="mr-2 text-2xl">&#128737;</span> Evaluación Oficial de Riesgo MagniTracking
+                        </h4>
+                        <span id="risk-badge" class="px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider self-start md:self-auto"></span>
+                    </div>
+                    <div id="ai-result-content" class="text-slate-900 leading-relaxed text-sm space-y-6">
+                        <!-- Dynamic Content Injected Here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Final de Asesoría -->
+        <section class="card border-none p-8 md:p-12 bg-gradient-to-r from-[#0A192F] to-[#15305B] text-white text-center shadow-2xl relative overflow-hidden">
+            <div class="relative z-10 max-w-3xl mx-auto">
+                <span class="text-corporate-orange font-black text-xs uppercase tracking-widest block mb-2">PROTEGE TU OPERACIÓN</span>
+                <h3 class="text-2xl md:text-4xl font-black mb-4 text-white">¿Deseas blindar tu flota con tecnología Anti-Jammer?</h3>
+                <p class="text-slate-200 text-base font-medium mb-8 leading-relaxed">
+                    Consulta con un especialista en gestión de riesgos de <span class="text-corporate-orange font-black">MagniTracking</span>. Diseñamos planes de monitoreo redundante, sensores autónomos de detección de inhibición y protocolos de respuesta rápida.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <a href="tel:4424453661" class="w-full sm:w-auto bg-corporate-orange hover:bg-orange-600 text-white font-extrabold py-3.5 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                        <span>Llamar al 442 445 3661</span>
+                    </a>
+                    <a href="https://wa.me/524424453661?text=Hola%20MagniTracking,%20deseo%20recibir%20asesor%C3%ADa%20sobre%20el%20Reporte%20de%20Inteligencia%20de%20Agosto%202026." target="_blank" rel="noopener" class="w-full sm:w-auto bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold py-3.5 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                        <span>Escribir por WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-corporate-navy text-center py-10 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="text-slate-300 font-extrabold mb-2">MagniTracking Inteligencia Logística &copy; Agosto 2026</p>
+            <p class="text-xs text-slate-400">Consolidado estadístico basado en datos del sector público (SESNSP, INEGI) y registros del sector privado especializado.</p>
+        </div>
+    </footer>
+
+    <!-- Botones Flotantes CTA -->
+    <div class="floating-cta">
+        <a href="https://wa.me/524424453661?text=Hola%20MagniTracking,%20deseo%20recibir%20asesor%C3%ADa%20sobre%20el%20Reporte%20de%20Inteligencia%20de%20Agosto%202026." target="_blank" class="btn-float btn-whatsapp-brand" title="Escríbenos por WhatsApp">
+            <span class="text-white text-2xl">&#128172;</span>
+        </a>
+        <a href="tel:4424453661" class="btn-float btn-phone-brand" title="Llámanos ahora">
+            <span class="text-corporate-navy text-xl font-black">&#9742;</span>
+        </a>
+    </div>
+
+    <!-- JavaScript Logic & Chart Initialization -->
+    <script>
+        const navColor = '#0A192F';
+        const orangeColor = '#FF6B00';
+        const slateColor = '#1E293B';
+        const gridColor = '#E2E8F0';
+
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            color: slateColor,
+            plugins: {
+                legend: { 
+                    display: true,
+                    labels: { color: navColor, font: { family: 'Inter', size: 12, weight: '700' } } 
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 25, 47, 0.95)',
+                    titleColor: '#fff',
+                    bodyColor: '#cbd5e1',
+                    padding: 12
+                }
+            }
+        };
+
+        // 1. Chart Context: Tendencia Histórica
+        new Chart(document.getElementById('chartContext'), {
+            type: 'bar',
+            data: {
+                labels: ['Agosto 2023 (272)', 'Agosto 2024 (289)', 'Agosto 2025 (303)', 'Agosto 2026 (318)'],
+                datasets: [{
+                    label: 'Eventos Siniestrales Registrados (Muestra Agosto)',
+                    data: [272, 289, 303, 318],
+                    backgroundColor: [navColor, navColor, navColor, orangeColor]
+                }]
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    y: { grid: { color: gridColor }, ticks: { font: { weight: 'bold' } } },
+                    x: { ticks: { font: { weight: 'bold' } } }
+                }
+            }
+        });
+
+        // 2. Chart Geo: Concentración Estatal Oficial
+        new Chart(document.getElementById('chartGeo'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Estado de México (30%)', 'Jalisco (8%)', 'Puebla (6%)', 'Guanajuato (6%)', 'Veracruz (6%)', 'Resto del País (44%)'],
+                datasets: [{
+                    data: [30, 8, 6, 6, 6, 44],
+                    backgroundColor: [orangeColor, navColor, '#3B82F6', '#10B981', '#6366F1', '#CBD5E1']
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11, weight: '600' } } }
+                }
+            }
+        });
+
+        // 3. Chart Days: Distribución Semanal Oficial
+        new Chart(document.getElementById('chartDays'), {
+            type: 'bar',
+            data: {
+                labels: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+                datasets: [{
+                    label: '% Incidentes (76%-83% en Días Hábiles)',
+                    data: [14, 12, 16, 17, 17, 12, 13],
+                    backgroundColor: [navColor, navColor, orangeColor, orangeColor, orangeColor, '#CBD5E1', '#E2E8F0']
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: gridColor }, ticks: { font: { weight: 'bold' } } },
+                    x: { ticks: { font: { weight: 'bold' } } }
+                }
+            }
+        });
+
+        const legendDaysEl = document.getElementById('legendDays');
+        if (legendDaysEl) {
+            legendDaysEl.innerHTML = `
+                <div class="legend-item"><span class="legend-color" style="background:${orangeColor}"></span>Pico Crítico (Mié - Vie: 50%)</div>
+                <div class="legend-item"><span class="legend-color" style="background:${navColor}"></span>Hábiles Moderados (Lun - Mar: 26%)</div>
+                <div class="legend-item"><span class="legend-color" style="background:#CBD5E1"></span>Fin de Semana (25%)</div>
+            `;
+        }
+
+        // 4. Chart Hours: Distribución 24h Oficial del Reporte
+        new Chart(document.getElementById('chartHours'), {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    '07:00 - 12:00 (16%)', 
+                    '12:00 - 19:00 (25%)', 
+                    '19:00 - 00:00 (28%)', 
+                    '00:00 - 07:00 (31%)'
+                ],
+                datasets: [{
+                    data: [16, 25, 28, 31],
+                    backgroundColor: ['#60A5FA', navColor, orangeColor, '#1E3A8A']
+                }]
+            },
+            options: {
+                ...commonOptions,
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11, weight: '600' } } }
+                }
+            }
+        });
+
+        // 5. Chart Products: Mercancías Objetivo Oficiales
+        new Chart(document.getElementById('chartProducts'), {
+            type: 'bar',
+            data: {
+                labels: [
+                    'Alimentos y abarrotes (33%)', 
+                    'Resto de mercancías (29%)', 
+                    'Cajas secas y pesados (24%)', 
+                    'Electrónicos y línea blanca (10%)', 
+                    'Metales e industria (4%)'
+                ],
+                datasets: [{
+                    label: '% Cargas Siniestradas',
+                    data: [33, 29, 24, 10, 4],
+                    backgroundColor: [orangeColor, '#64748B', navColor, '#3B82F6', '#10B981']
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                ...commonOptions,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: gridColor }, ticks: { font: { weight: 'bold' } } },
+                    y: { ticks: { font: { weight: 'bold' } } }
+                }
+            }
+        });
+
+        // 6. Interactive Route Risk Analyzer Algorithm
+        document.getElementById('btn-analyze').addEventListener('click', function () {
+            const origin = document.getElementById('route-origin').value.trim();
+            const dest = document.getElementById('route-dest').value.trim();
+            const time = document.getElementById('route-time').value;
+            const cargo = document.getElementById('route-cargo').value;
+            const errorEl = document.getElementById('error-message');
+            const resultContainer = document.getElementById('ai-result-container');
+            const resultCode = document.getElementById('ai-result-content');
+            const badge = document.getElementById('risk-badge');
+
+            if (!origin || !dest) {
+                errorEl.textContent = 'Por favor ingresa un Origen y un Destino para ejecutar el análisis táctico.';
+                errorEl.classList.remove('hidden');
+                resultContainer.classList.add('hidden');
+                return;
+            }
+
+            errorEl.classList.add('hidden');
+
+            const combined = (origin + ' ' + dest).toLowerCase();
+            let riskScore = 40; // Base score
+
+            // Corredores y Nodos de Alta Siniestralidad del Reporte
+            const criticalKeywords = [
+                'queretaro', 'querétaro', 'puebla', 'veracruz', 'texmelucan', 
+                'izcalli', 'ecatepec', 'guadalajara', 'tlaquepaque', 'edomex', 
+                'estado de mexico', 'estado de méxico', 'leon', 'león', 'san luis', 
+                'potosi', 'potosí', 'libres', 'celaya', 'silao', 'lagos de moreno',
+                'orizaba', 'tierra blanca', 'tecamac', 'tecámac', 'tlalnepantla', 'jilotepec'
+            ];
+            
+            criticalKeywords.forEach(kw => {
+                if (combined.includes(kw)) riskScore += 15;
+            });
+
+            // Ventana Horaria
+            if (time.includes('Nocturno')) riskScore += 25;
+            if (time.includes('Madrugada')) riskScore += 30;
+
+            // Tipo de Carga
+            if (cargo.includes('Alimentos')) riskScore += 20;
+            if (cargo.includes('Cajas Secas')) riskScore += 15;
+            if (cargo.includes('Electrónicos')) riskScore += 15;
+
+            riskScore = Math.min(riskScore, 98);
+
+            let riskLevel = 'MODERADO';
+            let badgeStyle = 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+            
+            if (riskScore >= 75) {
+                riskLevel = 'CRÍTICO / ALTO RIESGO';
+                badgeStyle = 'bg-red-100 text-red-800 border border-red-300';
+            } else if (riskScore < 50) {
+                riskLevel = 'PREVENTIVO / REGULAR';
+                badgeStyle = 'bg-green-100 text-green-800 border border-green-300';
+            }
+
+            badge.className = `px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider self-start md:self-auto ${badgeStyle}`;
+            badge.textContent = `Puntaje de Exposición: ${riskLevel} (${riskScore}/100)`;
+
+            let specificNotes = [];
+            if (combined.includes('queretaro') || combined.includes('querétaro') || combined.includes('leon') || combined.includes('león')) {
+                specificNotes.push('1. Carretera Fed. 45D (Méx - Qro - León): Presencia de bloqueos dinámicos, encandilamiento por láser verde e inhibición GPS.');
+            }
+            if (combined.includes('potosi') || combined.includes('potosí')) {
+                specificNotes.push('2. Carretera Fed. 57 (Qro - San Luis Potosí): Afectado por falsos retenes tácticos con clonación de patrullas y asaltos nocturnos.');
+            }
+            if (combined.includes('guadalajara') || combined.includes('lagos')) {
+                specificNotes.push('3. Carretera Fed. 80D (Gdl - Lagos de Moreno): Intercepciones agresivas mediante ponchallantas, obstáculos y despojo de remolques.');
+            }
+            if (combined.includes('puebla') || combined.includes('texmelucan')) {
+                specificNotes.push('San Martín Texmelucan / Puebla: Alta concentración delictiva en autotransporte de carga.');
+            }
+            
+            // Riesgo de Jammer obligatorio basado en reporte
+            specificNotes.push('Riesgo de Inhibición: En el 80%-85% de los robos carreteros se utiliza un jammer encendido al abordar la unidad.');
+
+            if (time.includes('Nocturno') || time.includes('Madrugada')) {
+                specificNotes.push('Exposición Temporal Crítica: El 59% de los robos ocurren entre las 19:00 y las 07:00 hrs.');
+            } else {
+                specificNotes.push('Horario Diurno: Representa una menor tasa de siniestralidad (16% matutino / 25% vespertino). Se sugiere mantener paso continuo.');
+            }
+
+            resultCode.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-slate-500 uppercase block">Ruta Evaluada</span>
+                        <span class="font-extrabold text-corporate-navy text-base">${origin} &rarr; ${dest}</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-slate-500 uppercase block">Ventana Horaria</span>
+                        <span class="font-bold text-slate-800 text-sm">${time}</span>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-slate-200">
+                        <span class="text-xs font-bold text-slate-500 uppercase block">Clasificación Carga</span>
+                        <span class="font-bold text-slate-800 text-sm">${cargo}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h5 class="font-bold text-corporate-navy text-base flex items-center gap-2">
+                        <span>&#128269;</span> Amenazas Detectadas en el Consolidado de Agosto 2026:
+                    </h5>
+                    <ul class="list-disc pl-5 space-y-1.5 text-slate-700 font-medium text-xs md:text-sm">
+                        ${specificNotes.map(n => `<li>${n}</li>`).join('')}
+                        <li><strong>Riesgo en Paradas (33%):</strong> Unidades estacionadas en cachimbas o paraderos no autorizados sufren despojo. Mantener paradas autorizadas.</li>
+                    </ul>
+                </div>
+
+                <div class="p-4 bg-orange-50 border-l-4 border-corporate-orange rounded-r-lg mt-4">
+                    <h5 class="font-black text-corporate-navy mb-2 text-xs uppercase tracking-wider">Protocolo de Protección Sugerido por MagniTracking:</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold text-slate-800">
+                        <div class="flex items-center gap-2">✔ Sensor Autónomo de Detección de Jammer</div>
+                        <div class="flex items-center gap-2">✔ Protocolo de Predenuncia Inmediata (&lt;10 min)</div>
+                        <div class="flex items-center gap-2">✔ Verificación en Cámara LPR con IA</div>
+                        <div class="flex items-center gap-2">✔ Custodia Virtual y Paro Inteligente</div>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end">
+                    <a href="tel:4424453661" class="text-xs font-extrabold text-corporate-orange hover:underline flex items-center gap-1">
+                        Solicitar Monitoreo Redundante o Anti-Jammer para esta Ruta &rarr;
+                    </a>
+                </div>
+            `;
+
+            resultContainer.classList.remove('hidden');
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    </script>
+</body>
+</html>
